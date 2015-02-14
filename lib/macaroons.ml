@@ -39,7 +39,7 @@ module type S = sig
   val equal : t -> t -> bool
   val serialize : t -> string
   type unserialize_error =
-    [ `Unexpected_char of char
+    [ `Unexpected_char of char * char
     | `Not_enough_data of int
     | `Unexpected_packet_id of string
     | `Character_not_found of char ]
@@ -60,9 +60,6 @@ end
 
 module Make (C : CRYPTO) = struct
 
-  let generate_derived_key k =
-    C.hmac ~key:k "macaroons-key-generator"
-
   type caveat =
     { cid : string;
       vid : string option;
@@ -77,7 +74,7 @@ module Make (C : CRYPTO) = struct
   let create ?location ~key ~id =
     { location; identifier = id;
       caveats = [];
-      signature = generate_derived_key key }
+      signature = C.hmac ~key id }
 
   let location {location} = location
   let identifier {identifier} = identifier
@@ -155,7 +152,7 @@ module Make (C : CRYPTO) = struct
     type ('a, 'b) reader = string -> int -> ('a, 'b) Result.t
 
     type error =
-      [ `Unexpected_char of char
+      [ `Unexpected_char of char * char
       | `Not_enough_data of int
       | `Unexpected_packet_id of string
       | `Character_not_found of char ]
@@ -182,7 +179,7 @@ module Make (C : CRYPTO) = struct
 
     let p_char c s o =
       need 1 s o >>= fun () ->
-      if s.[o] <> c then fail o (`Unexpected_char c)
+      if s.[o] <> c then fail o (`Unexpected_char (c, s.[o]))
       else return (o + 1)
 
     let index c s o =
@@ -275,21 +272,43 @@ module Make (C : CRYPTO) = struct
     else fail ()
 
   let verify m ~key ~check d =
-    match verify2 m (generate_derived_key key) check d with
+    match verify2 m (C.hmac ~key m.identifier) check d with
     | `Ok () -> true
     | `Error _ -> false
 
 end
 
 module SodiumCrypto : CRYPTO = struct
+  open Sodium
+
+  module A = Auth.Bytes
+
+  let fix_length s len =
+    let l = String.length s in
+    if len < l then String.sub s 0 len
+    else if len > l then s ^ (Bytes.make (len - l) '\000')
+    else s
+
   let hmac ~key m =
-    failwith "TODO"
+    let key = fix_length key Auth.key_size in
+    A.of_auth (A.auth (A.to_key key) m)
+
+  module H = Hash.Bytes
+
   let hash m =
-    failwith "TODO"
+    H.of_hash (H.digest m)
+
+  module B = Secret_box.Bytes
+
+  (* FIXME use random nonce *)
+  let nonce =
+    Secret_box.nonce_of_bytes (Bytes.make Secret_box.nonce_size '\000')
+
   let encrypt ~key m =
-    failwith "TODO"
+    B.secret_box (B.to_key key) m nonce
+
   let decrypt ~key m =
-    failwith "TODO"
+    B.secret_box_open (B.to_key key) m nonce
 end
 
 module Sodium = Make (SodiumCrypto)

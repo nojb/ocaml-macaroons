@@ -64,7 +64,7 @@ module type S = sig
       transmission over the network.  Its inverse is {!unserialize}. *)
 
   type unserialize_error =
-    [ `Unexpected_char of char
+    [ `Unexpected_char of char * char
     | `Not_enough_data of int
     | `Unexpected_packet_id of string
     | `Character_not_found of char ]
