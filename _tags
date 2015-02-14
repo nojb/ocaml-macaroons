@@ -1,0 +1,1 @@
+<lib/macaroons.*>: package(base64), package(hex)
