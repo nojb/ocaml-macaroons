@@ -22,37 +22,29 @@
 
 module type CRYPTO = sig
   val hmac : key:string -> string -> string
+  val hash : string -> string
   val encrypt : key:string -> string -> string
   val decrypt : key:string -> string -> string
 end
 
 module type S = sig
   type t
-
-  val create : location:string -> key:string -> id:string -> t
-
-  val location : t -> string
-
+  val create : ?location:string -> key:string -> id:string -> t
+  val location : t -> string option
   val identifier : t -> string
-
   val signature : t -> string
-
   val add_first_party_caveat : t -> string -> t
-
+  val add_third_party_caveat : t -> key:string -> ?location:string -> string -> t
+  val prepare_for_request : t -> t list -> t list
   val equal : t -> t -> bool
-
   val serialize : t -> string
-
   type unserialize_error =
     [ `Unexpected_char of char
     | `Not_enough_data of int
     | `Unexpected_packet_id of string
     | `Character_not_found of char ]
-
   val unserialize : string -> [ `Ok of t | `Error of int * unserialize_error ]
-
   val pp : Format.formatter -> t -> unit
-
   val verify : t -> key:string -> check:(string -> bool) -> t list -> bool
 end
 
@@ -77,25 +69,29 @@ module Make (C : CRYPTO) = struct
       cl : string option }
 
   type t =
-    { location : string;
+    { location : string option;
       identifier : string;
       signature : string;
       caveats : caveat list }
 
-  let create ~location ~key ~id =
+  let create ?location ~key ~id =
     { location; identifier = id;
       caveats = [];
       signature = generate_derived_key key }
 
   let location {location} = location
-
   let identifier {identifier} = identifier
-
   let signature {signature} = signature
 
   let add_first_party_caveat m cid =
     let caveats = m.caveats @ [{cid; vid = None; cl = None}] in
     let signature = C.hmac ~key:m.signature cid in
+    {m with caveats; signature}
+
+  let add_third_party_caveat m ~key ?location cid =
+    let vid = C.encrypt ~key:m.signature key in
+    let caveats = m.caveats @ [{ cid; vid = Some vid; cl = location }] in
+    let signature = C.hmac ~key:m.signature (vid ^ cid) in
     {m with caveats; signature}
 
   let equal m1 m2 =
@@ -142,7 +138,7 @@ module Make (C : CRYPTO) = struct
       w_option (w_packet "cl") c.cl
 
     let w_macaroon m =
-      w_packet "location" m.location <>
+      w_option (w_packet "location") m.location <>
       w_packet "identifier" m.identifier <>
       List.fold_left (fun w c -> w <> w_caveat c) w_empty m.caveats <>
       w_packet "signature" m.signature
@@ -211,8 +207,13 @@ module Make (C : CRYPTO) = struct
       | ((k, v), o) when k = n -> return (v, o)
       | ((k, _), _) -> fail o (`Unexpected_packet_id k)
 
+    let p_option r s o =
+      match r s o with
+      | `Ok (x, o) -> return (Some x, o)
+      | `Error _ -> return (None, o)
+
     let p_macaroon s o =
-      p_named_packet "location" s o >>= fun (location, o) ->
+      p_option (p_named_packet "location") s o >>= fun (location, o) ->
       p_named_packet "identifier" s o >>= fun (identifier, o) ->
       let rec loop caveats c = function
         | (("cid", cid), o) ->
@@ -238,34 +239,57 @@ module Make (C : CRYPTO) = struct
 
   let pp ppf m =
     let hex s = let `Hex s = Hex.of_string ~pretty:true s in s in
-    Format.fprintf ppf "location@ %s\n" m.location;
+    (* Format.fprintf ppf "location@ %s\n" m.location; *)
     Format.fprintf ppf "identifier@ %s\n" m.identifier;
     List.iter (function c -> Format.fprintf ppf "cid@ %s\n" c.cid) m.caveats;
     Format.fprintf ppf "signature@ %s\n" (hex m.signature)
 
   open Result
 
+  let bind_for_request s1 s2 = C.hash (s1 ^ s2)
+
+  let prepare_for_request m d =
+    List.map (fun d -> {d with signature = bind_for_request m.signature d.signature}) d
+
+  let find cid d =
+    try
+      return (List.find (fun m -> m.identifier = cid) d)
+    with
+    | Not_found ->
+      fail ()
+
+  let rec verify2 m k check d =
+    let rec loop cs = function
+      | { cid; vid = None } :: caveats when check cid ->
+        loop (C.hmac ~key:cs cid) caveats
+      | { vid = None } :: _ -> fail ()
+      | { cid; vid = Some vid } :: caveats ->
+        find cid d >>= fun m ->
+        verify2 m (C.decrypt ~key:cs vid) check d >>= fun () ->
+        loop (C.hmac ~key:cs (vid ^ cid)) caveats
+      | [] ->
+        return cs
+    in
+    loop (C.hmac ~key:k m.identifier) m.caveats >>= fun cs ->
+    if bind_for_request k cs = m.signature then return ()
+    else fail ()
+
   let verify m ~key ~check d =
-    (* let rec verify2 rs rk m = *)
-    (*   let rec loop cs = function *)
-    (*     | { cid; vid = None } :: caveats -> *)
-    (*       if check cid then *)
-    (*         loop (C.hmac ~key:cs cid) caveats *)
-    (*       else *)
-    (*         fail () *)
-    (*     | { cid; vid = Some vid } :: caveats -> *)
-    (*       catch (List.find (fun m -> m.identifier = cid) d) (fun _ -> fail ()) >>= fun m -> *)
-    (*       verify2 rs (C.decrypt ~key:cs vid) m >>= fun _ -> *)
-    (*       loop (C.hmac ~key:cs (vid ^ cid)) caveats *)
-    (*     | [] -> *)
-    (*       return cs *)
-    (*   in *)
-    (*   match loop (C.hmac ~key:rk m.identifier) m.caveats with *)
-    (*   | `Error _ -> false *)
-    (*   | `Ok cs -> *)
-    (*     bind_for_request rs cs = m.signature *)
-    (* in *)
-    (* verify2 m.signature (generate_derived_key key) m *)
-    assert false
+    match verify2 m (generate_derived_key key) check d with
+    | `Ok () -> true
+    | `Error _ -> false
 
 end
+
+module SodiumCrypto : CRYPTO = struct
+  let hmac ~key m =
+    failwith "TODO"
+  let hash m =
+    failwith "TODO"
+  let encrypt ~key m =
+    failwith "TODO"
+  let decrypt ~key m =
+    failwith "TODO"
+end
+
+module Sodium = Make (SodiumCrypto)
