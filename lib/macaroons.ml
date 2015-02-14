@@ -234,11 +234,25 @@ module Make (C : CRYPTO) = struct
     Reader.p_macaroon (B64.decode s) 0
 
   let pp ppf m =
-    let hex s = let `Hex s = Hex.of_string ~pretty:true s in s in
-    (* Format.fprintf ppf "location@ %s\n" m.location; *)
-    Format.fprintf ppf "identifier@ %s\n" m.identifier;
-    List.iter (function c -> Format.fprintf ppf "cid@ %s\n" c.cid) m.caveats;
-    Format.fprintf ppf "signature@ %s\n" (hex m.signature)
+    let hex s = let `Hex s = Hex.of_string s in s in
+    Format.fprintf ppf "@[<v 0>";
+    Format.fprintf ppf "@[<v 2>location@ %S@]@," m.location;
+    Format.fprintf ppf "@[<v 2>identifier@ %S@]@," m.identifier;
+    List.iter begin function c ->
+      Format.fprintf ppf "@[<v 2>cid@ %S@]@," c.cid;
+      begin match c.vid with
+        | None -> ()
+        | Some vid ->
+          Format.fprintf ppf "@[<v 2>vid@ %S@]@," vid
+      end;
+      begin match c.cl with
+        | None -> ()
+        | Some cl ->
+          Format.fprintf ppf "@[<v 2>cl@ %S@]@," cl
+      end
+    end m.caveats;
+    Format.fprintf ppf "@[<v 2>signature@ %s@]@," (hex m.signature);
+    Format.fprintf ppf "@]"
 
   open Result
 
