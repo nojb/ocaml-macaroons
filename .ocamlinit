@@ -1,5 +1,5 @@
-#directory "_build/lib"
-#require "sodium"
-#require "hex"
-#require "base64"
-#load_rec "macaroons.cma"
+#require "sodium";;
+#require "hex";;
+#require "base64";;
+#directory "_build/lib";;
+#load "macaroons.cma";;

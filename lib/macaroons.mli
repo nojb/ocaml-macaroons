@@ -40,9 +40,9 @@ module type S = sig
   type t
   (** The type of macaroons. *)
 
-  val create : ?location:string -> key:string -> id:string -> t
+  val create : location:string -> key:string -> id:string -> t
 
-  val location : t -> string option
+  val location : t -> string
   (** [location m] is the {e location} of [m] (if any). *)
 
   val identifier : t -> string

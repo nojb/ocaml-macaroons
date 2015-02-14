@@ -29,8 +29,8 @@ end
 
 module type S = sig
   type t
-  val create : ?location:string -> key:string -> id:string -> t
-  val location : t -> string option
+  val create : location:string -> key:string -> id:string -> t
+  val location : t -> string
   val identifier : t -> string
   val signature : t -> string
   val add_first_party_caveat : t -> string -> t
@@ -66,12 +66,12 @@ module Make (C : CRYPTO) = struct
       cl : string option }
 
   type t =
-    { location : string option;
+    { location : string;
       identifier : string;
       signature : string;
       caveats : caveat list }
 
-  let create ?location ~key ~id =
+  let create ~location ~key ~id =
     { location; identifier = id;
       caveats = [];
       signature = C.hmac ~key id }
@@ -130,12 +130,12 @@ module Make (C : CRYPTO) = struct
       | Some x -> w x
 
     let w_caveat c =
-      w_packet "cid" c.cid <>
       w_option (w_packet "vid") c.vid <>
-      w_option (w_packet "cl") c.cl
+      w_option (w_packet "cl") c.cl <>
+      w_packet "cid" c.cid
 
     let w_macaroon m =
-      w_option (w_packet "location") m.location <>
+      w_packet "location" m.location <>
       w_packet "identifier" m.identifier <>
       List.fold_left (fun w c -> w <> w_caveat c) w_empty m.caveats <>
       w_packet "signature" m.signature
@@ -190,10 +190,9 @@ module Make (C : CRYPTO) = struct
 
     let p_packet s o =
       p_int s o >>= fun (l, o) ->
-      let oend = o + l in
-      index ' ' s (o + 4) >>= fun i ->
-      let l = i - o - 4 in
-      p_string l s (o + 4) >>= fun (k, o) ->
+      let oend = o + l - 4 in
+      index ' ' s o >>= fun i ->
+      p_string (i - o) s o >>= fun (k, o) ->
       p_char ' ' s o >>= fun o ->
       p_string (oend - o - 1) s o >>= fun (v, o) ->
       p_char '\n' s o >>= fun o ->
@@ -204,13 +203,13 @@ module Make (C : CRYPTO) = struct
       | ((k, v), o) when k = n -> return (v, o)
       | ((k, _), _) -> fail o (`Unexpected_packet_id k)
 
-    let p_option r s o =
-      match r s o with
-      | `Ok (x, o) -> return (Some x, o)
-      | `Error _ -> return (None, o)
+    (* let p_option r s o = *)
+    (*   match r s o with *)
+    (*   | `Ok (x, o) -> return (Some x, o) *)
+    (*   | `Error _ -> return (None, o) *)
 
     let p_macaroon s o =
-      p_option (p_named_packet "location") s o >>= fun (location, o) ->
+      p_named_packet "location" s o >>= fun (location, o) ->
       p_named_packet "identifier" s o >>= fun (identifier, o) ->
       let rec loop caveats c = function
         | (("cid", cid), o) ->
