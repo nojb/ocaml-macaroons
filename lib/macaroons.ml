@@ -71,8 +71,21 @@ module Make (C : CRYPTO) = struct
       signature : string;
       caveats : caveat list }
 
+  (* derives a fixed-length key from a variable length-key.  The literal data
+     used is the same as in [libmacaroons]. *)
+  let make_key k =
+    C.hmac ~key:"macaroons-key-generator" k
+
+  let hmac2 ~key s1 s2 =
+    C.hmac ~key (C.hmac ~key s1 ^ C.hmac ~key s2)
+
+  let hash2 s1 s2 =
+    C.hash (C.hash s1 ^ C.hash s2)
+
   let create ~location ~key ~id =
-    { location; identifier = id;
+    let key = make_key key in
+    { location;
+      identifier = id;
       caveats = [];
       signature = C.hmac ~key id }
 
@@ -86,9 +99,10 @@ module Make (C : CRYPTO) = struct
     {m with caveats; signature}
 
   let add_third_party_caveat m ~key ?location cid =
+    let key = make_key key in
     let vid = C.encrypt ~key:m.signature key in
     let caveats = m.caveats @ [{ cid; vid = Some vid; cl = location }] in
-    let signature = C.hmac ~key:m.signature (vid ^ cid) in
+    let signature = hmac2 ~key:m.signature vid cid in
     {m with caveats; signature}
 
   let equal m1 m2 =
@@ -256,7 +270,8 @@ module Make (C : CRYPTO) = struct
 
   open Result
 
-  let bind_for_request s1 s2 = C.hash (s1 ^ s2)
+  let bind_for_request s1 s2 =
+    if s1 = s2 then s2 else hash2 s1 s2
 
   let prepare_for_request m d =
     List.map (fun d -> {d with signature = bind_for_request m.signature d.signature}) d
@@ -268,24 +283,25 @@ module Make (C : CRYPTO) = struct
     | Not_found ->
       fail ()
 
-  let rec verify2 m k check d =
-    let rec loop cs = function
+  let rec verify m rsig key check d =
+    let rec loop csig = function
       | { cid; vid = None } :: caveats when check cid ->
-        loop (C.hmac ~key:cs cid) caveats
+        loop (C.hmac ~key:csig cid) caveats
       | { vid = None } :: _ -> fail ()
       | { cid; vid = Some vid } :: caveats ->
         find cid d >>= fun m ->
-        verify2 m (C.decrypt ~key:cs vid) check d >>= fun () ->
-        loop (C.hmac ~key:cs (vid ^ cid)) caveats
+        verify m rsig (C.decrypt ~key:csig vid) check d >>= fun () ->
+        loop (hmac2 ~key:csig vid cid) caveats
       | [] ->
-        return cs
+        return csig
     in
-    loop (C.hmac ~key:k m.identifier) m.caveats >>= fun cs ->
-    if bind_for_request k cs = m.signature then return ()
+    loop (C.hmac ~key m.identifier) m.caveats >>= fun csig ->
+    if bind_for_request rsig csig = m.signature then return ()
     else fail ()
 
   let verify m ~key ~check d =
-    match verify2 m (C.hmac ~key m.identifier) check d with
+    let key = make_key key in
+    match verify m m.signature key check d with
     | `Ok () -> true
     | `Error _ -> false
 
