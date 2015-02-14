@@ -52,8 +52,14 @@ module type S = sig
   (** [signature m] is the {e signature} of [m]. *)
 
   val add_first_party_caveat : t -> string -> t
+  (** [add_first_party_caveat m cid] adds a caveat which will be discharged by
+      the target service.  See {!verify}. *)
 
   val add_third_party_caveat : t -> key:string -> ?location:string -> string -> t
+  (** [add_third_party_caveat m ~key ~location cid] adds a caveat that will be
+      discharged by a third-party.  The third party is to produce, upon request,
+      a macaroon proving that the caveat has been discharged.  This hypothetical
+      macaroon must be minted with root key [key].  See {!verify}. *)
 
   val prepare_for_request : t -> t list -> t list
 
