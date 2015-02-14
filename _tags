@@ -1,1 +1,2 @@
 <lib/macaroons.*>: package(base64), package(hex), package(sodium)
+true: bin_annot
