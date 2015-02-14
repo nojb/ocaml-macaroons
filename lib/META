@@ -1,0 +1,7 @@
+version = 0.1.0
+description = "Macaroons for OCaml"
+archive(byte) = macaroons.cma
+archive(byte, plugin) = macaroons.cma
+archive(native) = macaroons.cmxa
+archive(native, plugin) = macaroons.cmxs
+exists_if = macaroons.cma
