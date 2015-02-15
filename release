@@ -1,9 +1,15 @@
 #!/bin/bash
 
 set -x
+set -e
 
 [ -z "$1" ] && echo "Need to pass VERSION as first argument" && exit 1
 
+make all
+make doc
+make test
 git tag -f "v$1"
-git push origin master && git push origin "v$1"
+git push origin master
+git push --force origin "v$1"
 opam-publish prepare "macaroons.$1" "https://github.com/nojb/ocaml-macaroons/archive/v$1.tar.gz"
+opam-publish submit "./macaroons.$1"
