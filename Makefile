@@ -27,6 +27,10 @@ uninstall:
 
 reinstall: uninstall install
 
+test: all
+	$(OCAMLBUILD) lib_test/test.byte
+	./test.byte
+
 doc: all
 	$(OCAMLBUILD) -docflag -colorize-code doc/api.docdir/index.html
 	cp doc/style.css api.docdir

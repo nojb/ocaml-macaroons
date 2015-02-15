@@ -1,4 +1,6 @@
 <lib/macaroons.*>: package(base64), package(hex)
 <lib/sodium_*>: package(sodium)
+<lib_test/test.*>: package(ounit), package(base64), package(hex), package(sodium)
 <lib>: include
+
 true: bin_annot
