@@ -9,7 +9,7 @@ let location = "http://mybank/"
 let m0 = M.create ~location ~key:secret ~id:public
 
 let test_serialize m ctxt =
-  match M.unserialize (M.serialize m) with
+  match M.deserialize (M.serialize m) with
   | `Ok m' -> assert_equal ~ctxt m m'
   | `Error _ -> assert false
 

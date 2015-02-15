@@ -73,16 +73,16 @@ module type S = sig
 
   val serialize : t -> string
   (** [serialize m] converts the macaroon [m] into a base64-string suitable for
-      transmission over the network.  Its inverse is {!unserialize}. *)
+      transmission over the network.  Its inverse is {!deserialize}. *)
 
-  type unserialize_error =
+  type deserialize_error =
     [ `Unexpected_char of char * char
     | `Not_enough_data of int
     | `Unexpected_packet_id of string
     | `Character_not_found of char ]
 
-  val unserialize : string -> [ `Ok of t | `Error of int * unserialize_error ]
-  (** [unserialize m] is the inverse of {!serialize}. *)
+  val deserialize : string -> [ `Ok of t | `Error of int * deserialize_error ]
+  (** [deserialize m] is the inverse of {!serialize}. *)
 
   val pp : Format.formatter -> t -> unit
   (** [pp ppf m] prints a user-readable description of the macaroon [m] for

@@ -38,12 +38,12 @@ module type S = sig
   val prepare_for_request : t -> t -> t
   val equal : t -> t -> bool
   val serialize : t -> string
-  type unserialize_error =
+  type deserialize_error =
     [ `Unexpected_char of char * char
     | `Not_enough_data of int
     | `Unexpected_packet_id of string
     | `Character_not_found of char ]
-  val unserialize : string -> [ `Ok of t | `Error of int * unserialize_error ]
+  val deserialize : string -> [ `Ok of t | `Error of int * deserialize_error ]
   val pp : Format.formatter -> t -> unit
   val verify : t -> key:string -> check:(string -> bool) -> t list -> bool
 end
@@ -242,9 +242,9 @@ module Make (C : CRYPTO) = struct
       p_packet s o >>= loop [] {cid = ""; vid = None; cl = None}
   end
 
-  type unserialize_error = Reader.error
+  type deserialize_error = Reader.error
 
-  let unserialize s =
+  let deserialize s =
     Reader.p_macaroon (B64.decode s) 0
 
   let pp ppf m =
