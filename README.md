@@ -14,11 +14,12 @@ for more information.
 
 #### How to install
 
-Using OPAM (NOT YET WORKING):
+Make sure that you have installed [`libsodium`](https://github.com/jedisct1/libsodium).
+
+Using OPAM:
 ```
-opam install macaroons
+opam install sodium macaroons
 ```
-(make sure that you have installed [`libsodium`](https://github.com/jedisct1/libsodium).)
 
 Manually:
 ```

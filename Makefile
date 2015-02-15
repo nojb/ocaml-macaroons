@@ -46,4 +46,4 @@ gh-pages: doc
 	git -C .gh-pages push origin gh-pages -f
 	rm -rf .gh-pages
 
-.PHONY: all clean install uninstall reinstall doc gh-pages
+.PHONY: all clean install uninstall reinstall doc gh-pages test
