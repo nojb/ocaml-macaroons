@@ -35,7 +35,7 @@ module type S = sig
   val signature : t -> string
   val add_first_party_caveat : t -> string -> t
   val add_third_party_caveat : t -> key:string -> ?location:string -> string -> t
-  val prepare_for_request : t -> t list -> t list
+  val prepare_for_request : t -> t -> t
   val equal : t -> t -> bool
   val serialize : t -> string
   type unserialize_error =
@@ -257,7 +257,7 @@ module Make (C : CRYPTO) = struct
       begin match c.vid with
         | None -> ()
         | Some vid ->
-          Format.fprintf ppf "@[<v 2>vid@ %S@]@," vid
+          Format.fprintf ppf "@[<v 2>vid@ %s@]@," (B64.encode ~pad:true vid)
       end;
       begin match c.cl with
         | None -> ()
@@ -274,7 +274,7 @@ module Make (C : CRYPTO) = struct
     if s1 = s2 then s2 else hash2 s1 s2
 
   let prepare_for_request m d =
-    List.map (fun d -> {d with signature = bind_for_request m.signature d.signature}) d
+    {d with signature = bind_for_request m.signature d.signature}
 
   let find cid d =
     try
@@ -306,38 +306,3 @@ module Make (C : CRYPTO) = struct
     | `Error _ -> false
 
 end
-
-module SodiumCrypto : CRYPTO = struct
-  open Sodium
-
-  module A = Auth.Bytes
-
-  let fix_length s len =
-    let l = String.length s in
-    if len < l then String.sub s 0 len
-    else if len > l then s ^ (Bytes.make (len - l) '\000')
-    else s
-
-  let hmac ~key m =
-    let key = fix_length key Auth.key_size in
-    A.of_auth (A.auth (A.to_key key) m)
-
-  module H = Hash.Bytes
-
-  let hash m =
-    H.of_hash (H.digest m)
-
-  module B = Secret_box.Bytes
-
-  (* FIXME use random nonce *)
-  let nonce =
-    Secret_box.nonce_of_bytes (Bytes.make Secret_box.nonce_size '\000')
-
-  let encrypt ~key m =
-    B.secret_box (B.to_key key) m nonce
-
-  let decrypt ~key m =
-    B.secret_box_open (B.to_key key) m nonce
-end
-
-module Sodium = Make (SodiumCrypto)

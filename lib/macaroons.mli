@@ -61,9 +61,15 @@ module type S = sig
       a macaroon proving that the caveat has been discharged.  This hypothetical
       macaroon must be minted with root key [key].  See {!verify}. *)
 
-  val prepare_for_request : t -> t list -> t list
+  val prepare_for_request : t -> t -> t
+  (** [prepare_for_request m d] should be invoke for each discharge macaroon [d]
+      associated to the main authorizing macaroon [m] before sending them off
+      the target service for verification.  It binds the the signatures of [d]
+      and [m] together making it impossible for a malicious third party to
+      maliciously re-use [d] to discharge third-party caveats of [m]. *)
 
   val equal : t -> t -> bool
+  (** Whether two macaroons are equal. *)
 
   val serialize : t -> string
   (** [serialize m] converts the macaroon [m] into a base64-string suitable for
@@ -83,15 +89,12 @@ module type S = sig
       debugging purposes. *)
 
   val verify : t -> key:string -> check:(string -> bool) -> t list -> bool
-  (** [verify m ~key ~check d] verifies whether all the caveats of [m] are
-      verified.  [key] must be the key used with {!create}.  [check] is called to
-      verify all first-party caveats.  [d] is a list of {e discharge} macaroons used
-      to verify third-party cavests. *)
+  (** [verify m ~key ~check d] verifies whether all the caveats of [m] hold.
+      [key] must be the key used with {!create}.  [check] is called to verify
+      all first-party caveats.  [d] is a list of {e discharge} macaroons used to
+      verify third-party cavests.  Each element of [d] must have been previously
+      bound with [m] using {!prepare_for_request}. *)
 end
 
 module Make (C : CRYPTO) : S
 (** Macaroons that use [C] for their cryptographic needs. *)
-
-module Sodium : S
-(** Macaroons that use {{:https://github.com/dsheets/ocaml-sodium}ocaml-sodium}
-    for their cryptographic needs. *)

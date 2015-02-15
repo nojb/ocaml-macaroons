@@ -1,14 +1,26 @@
-OCAMLBUILD=ocamlbuild -use-ocamlfind -classic-display
+OCAMLBUILD = ocamlbuild -use-ocamlfind -classic-display
 
-all:
-	$(OCAMLBUILD) lib/macaroons.cma lib/macaroons.cmxa lib/macaroons.cmxs
+all: macaroons sodium_macaroons
+
+OBJECTS = macaroons.cma macaroons.cmxa macaroons.cmxs
+
+macaroons:
+	$(OCAMLBUILD) $(addprefix lib/, $(OBJECTS))
+
+sodium_macaroons:
+	$(OCAMLBUILD) $(addprefix lib/sodium_, $(OBJECTS))
 
 clean:
 	$(OCAMLBUILD) -clean
 
+PRODUCTS = \
+	macaroons.mli macaroons.cmi macaroons.cmti macaroons.cma \
+	macaroons.cmxa macaroons.cmxs
+
 install: all
 	ocamlfind install macaroons lib/META \
-	$(addprefix _build/lib/,macaroons.mli macaroons.cmi macaroons.cmti macaroons.cma macaroons.cmxa macaroons.cmxs)
+	$(addprefix _build/lib/,$(PRODUCTS)) \
+	$(addprefix _build/lib/sodium_,$(PRODUCTS))
 
 uninstall:
 	ocamlfind remove macaroons
