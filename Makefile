@@ -6,7 +6,7 @@ all:
 clean:
 	$(OCAMLBUILD) -clean
 
-install:
+install: all
 	ocamlfind install macaroons lib/META \
 	$(addprefix _build/lib/,macaroons.mli macaroons.cmi macaroons.cmti macaroons.cma macaroons.cmxa macaroons.cmxs)
 

@@ -91,7 +91,7 @@ module Make (C : CRYPTO) = struct
 
   let location {location} = location
   let identifier {identifier} = identifier
-  let signature {signature} = signature
+  let signature {signature} = let `Hex s = Hex.of_string signature in s
 
   let add_first_party_caveat m cid =
     let caveats = m.caveats @ [{cid; vid = None; cl = None}] in
