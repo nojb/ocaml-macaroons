@@ -17,7 +17,11 @@ PRODUCTS = \
 	macaroons.mli macaroons.cmi macaroons.cmti macaroons.cma \
 	macaroons.cmxa macaroons.cmxs
 
-install: all
+install:
+	ocamlfind install macaroons lib/META \
+	$(addprefix _build/lib/,$(PRODUCTS)) \
+
+install_sodium:
 	ocamlfind install macaroons lib/META \
 	$(addprefix _build/lib/,$(PRODUCTS)) \
 	$(addprefix _build/lib/sodium_,$(PRODUCTS))
@@ -27,11 +31,11 @@ uninstall:
 
 reinstall: uninstall install
 
-test: all
+test: sodium_macaroons
 	$(OCAMLBUILD) lib_test/test.byte
 	./test.byte
 
-doc: all
+doc:
 	$(OCAMLBUILD) -docflag -colorize-code doc/api.docdir/index.html
 	cp doc/style.css api.docdir
 
