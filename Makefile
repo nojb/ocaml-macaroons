@@ -28,7 +28,8 @@ uninstall:
 reinstall: uninstall install
 
 doc: all
-	$(OCAMLBUILD) lib/api.docdir/index.html
+	$(OCAMLBUILD) -docflag -colorize-code doc/api.docdir/index.html
+	cp doc/style.css api.docdir
 
 gh-pages: doc
 	git clone `git config --get remote.origin.url` .gh-pages --reference .
