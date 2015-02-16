@@ -6,11 +6,11 @@ dev-repo: "https://www.github.com/nojb/ocaml-macaroons.git"
 bug-reports: "https://www.github.com/nojb/ocaml-macaroons/issues"
 license: "MIT"
 build: [
-  ["./setup" "build"]
+  [make]
 ]
-build-doc: ["./setup" "doc"]
+build-doc: [make "doc"]
 install: [
-  ["./setup" "install"]
+  [make "install"]
 ]
 remove: ["ocamlfind" "remove" "macaroons"]
 depends: [
