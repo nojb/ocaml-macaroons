@@ -1,0 +1,113 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Macaroons" rel="Chapter" href="Macaroons.html">
+<link title="Sodium_macaroons" rel="Chapter" href="Sodium_macaroons.html"><title>Index of values</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Index of values</h1>
+<table>
+<tr><td align="left"><br>A</td></tr>
+<tr><td><a href="Macaroons.S.html#VALadd_first_party_caveat">add_first_party_caveat</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">add_first_party_caveat m cid</code> adds a caveat which will be discharged by
+      the target service.
+</div>
+</td></tr>
+<tr><td><a href="Macaroons.S.html#VALadd_third_party_caveat">add_third_party_caveat</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">add_third_party_caveat m ~key ~location cid</code> adds a caveat that will be
+      discharged by a third-party.
+</div>
+</td></tr>
+<tr><td align="left"><br>C</td></tr>
+<tr><td><a href="Macaroons.S.html#VALcreate">create</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>D</td></tr>
+<tr><td><a href="Macaroons.CRYPTO.html#VALdecrypt">decrypt</a> [<a href="Macaroons.CRYPTO.html">Macaroons.CRYPTO</a>]</td>
+<td><div class="info">
+<code class="code">decrypt ~key m</code> symmetrically decrypts message <code class="code">m</code> under key <code class="code">key</code>.
+</div>
+</td></tr>
+<tr><td><a href="Macaroons.S.html#VALdeserialize">deserialize</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">deserialize m</code> is the inverse of <a href="Macaroons.S.html#VALserialize"><code class="code"><span class="constructor">Macaroons</span>.<span class="constructor">S</span>.serialize</code></a>.
+</div>
+</td></tr>
+<tr><td align="left"><br>E</td></tr>
+<tr><td><a href="Macaroons.CRYPTO.html#VALencrypt">encrypt</a> [<a href="Macaroons.CRYPTO.html">Macaroons.CRYPTO</a>]</td>
+<td><div class="info">
+<code class="code">encrypt ~key m</code> symmetrically encrypts message <code class="code">m</code> under key <code class="code">key</code>.
+</div>
+</td></tr>
+<tr><td><a href="Macaroons.S.html#VALequal">equal</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+Whether two macaroons are equal.
+</div>
+</td></tr>
+<tr><td align="left"><br>H</td></tr>
+<tr><td><a href="Macaroons.CRYPTO.html#VALhash">hash</a> [<a href="Macaroons.CRYPTO.html">Macaroons.CRYPTO</a>]</td>
+<td><div class="info">
+<code class="code">hash m</code> hashes <code class="code">m</code>.
+</div>
+</td></tr>
+<tr><td><a href="Macaroons.CRYPTO.html#VALhmac">hmac</a> [<a href="Macaroons.CRYPTO.html">Macaroons.CRYPTO</a>]</td>
+<td><div class="info">
+<code class="code">hmac ~key m</code> computes an HMAC of the message <code class="code">m</code> using the key <code class="code">key</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Macaroons.S.html#VALidentifier">identifier</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">identifier m</code> is the <em>identifier</em> of <code class="code">m</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>L</td></tr>
+<tr><td><a href="Macaroons.S.html#VALlocation">location</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">location m</code> is the <em>location</em> of <code class="code">m</code> (if any).
+</div>
+</td></tr>
+<tr><td align="left"><br>P</td></tr>
+<tr><td><a href="Macaroons.S.html#VALpp">pp</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">pp ppf m</code> prints a user-readable description of the macaroon <code class="code">m</code> for
+      debugging purposes.
+</div>
+</td></tr>
+<tr><td><a href="Macaroons.S.html#VALprepare_for_request">prepare_for_request</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">prepare_for_request m d</code> should be invoke for each discharge macaroon <code class="code">d</code>
+      associated to the main authorizing macaroon <code class="code">m</code> before sending them off
+      the target service for verification.
+</div>
+</td></tr>
+<tr><td align="left"><br>S</td></tr>
+<tr><td><a href="Macaroons.S.html#VALserialize">serialize</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">serialize m</code> converts the macaroon <code class="code">m</code> into a base64-string suitable for
+      transmission over the network.
+</div>
+</td></tr>
+<tr><td><a href="Macaroons.S.html#VALsignature">signature</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">signature m</code> is the <em>signature</em> of <code class="code">m</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>V</td></tr>
+<tr><td><a href="Macaroons.S.html#VALverify">verify</a> [<a href="Macaroons.S.html">Macaroons.S</a>]</td>
+<td><div class="info">
+<code class="code">verify m ~key ~check d</code> verifies whether all the caveats of <code class="code">m</code> hold.
+</div>
+</td></tr>
+</table>
+</body>
+</html>
