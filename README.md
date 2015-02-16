@@ -24,8 +24,8 @@ Manually:
 ```
 git clone https://github.com/nojb/ocaml-macaroons
 cd ocaml-macaroons
-./setup build
-./setup install
+make
+make install
 ```
 
 #### Documentation
