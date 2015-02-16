@@ -294,18 +294,20 @@ module Make (C : CRYPTO) = struct
       fail ()
 
   let rec verify m rsig key check d =
-    let rec loop csig = function
+    let rec loop seen csig = function
       | { cid; vid = None } :: caveats when check cid ->
-        loop (C.hmac ~key:csig cid) caveats
+        loop seen (C.hmac ~key:csig cid) caveats
       | { vid = None } :: _ -> fail ()
+      | { cid; vid = Some _ } :: _ when List.mem cid seen ->
+        fail ()
       | { cid; vid = Some vid } :: caveats ->
         find cid d >>= fun m ->
         verify m rsig (C.decrypt ~key:csig vid) check d >>= fun () ->
-        loop (hmac2 ~key:csig vid cid) caveats
+        loop (cid :: seen) (hmac2 ~key:csig vid cid) caveats
       | [] ->
         return csig
     in
-    loop (C.hmac ~key m.identifier) m.caveats >>= fun csig ->
+    loop [] (C.hmac ~key m.identifier) m.caveats >>= fun csig ->
     if bind_for_request rsig csig = m.signature then return ()
     else fail ()
 
