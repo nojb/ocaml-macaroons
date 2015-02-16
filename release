@@ -3,11 +3,18 @@
 set -x
 set -e
 
+# make sure there are no uncommited changes
+git diff --quiet && git diff --cached --quiet
+
 [ -z "$1" ] && echo "Need to pass VERSION as first argument" && exit 1
 
+# make sure it compiles
 make all
-make doc
+# update online docs
+make gh-pages
+# make sure it passes tests
 make test
+
 git tag -f "v$1"
 git push origin master
 git push --force origin "v$1"
