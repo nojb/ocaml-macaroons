@@ -51,6 +51,10 @@ function install {
     ocamlfind install macaroons lib/META _build/lib/*macaroons.{mli,cmi,cmti,cma,cmxa,cmxs}
 }
 
+function uninstall {
+    ocamlfind remove macaroons
+}
+
 case "$1" in
     release)
         [ -z "$2" ] && echo "Please specify VERSION (without the v)" && exit 1
@@ -80,11 +84,11 @@ case "$1" in
         ;;
 
     uninstall)
-        ocamlfind remove macaroons
+        uninstall
         ;;
 
     reinstall)
-        ocamlfind remove macaroons
+        uninstall
         install
         ;;
 
