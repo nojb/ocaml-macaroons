@@ -9,11 +9,7 @@ fi
 
 function ocamlbuild { command ocamlbuild -use-ocamlfind -classic-display "$@"; }
 
-function release {
-    git tag -f "v$1"
-    git push origin master
-    git push --force origin "v$1"
-    opam-publish prepare "macaroons.$1" "https://github.com/nojb/ocaml-macaroons/archive/v$1.tar.gz"
+function submit {
     opam-publish submit "./macaroons.$1"
 }
 
@@ -55,19 +51,36 @@ function uninstall {
     ocamlfind remove macaroons
 }
 
+function prepare {
+    [ -z "$1" ] && echo "Please specify VERSION (without the v)" && exit 1
+
+    # make sure there are no uncommited changes
+    git diff --quiet && git diff --cached --quiet
+
+    # make sure it compiles
+    build
+
+    # make sure it passes tests
+    test
+
+    # update online docs
+    doc
+    gh-pages
+
+    git tag -f "v$1"
+    git push origin master
+    git push --force origin "v$1"
+    opam-publish prepare "macaroons.$1" "https://github.com/nojb/ocaml-macaroons/archive/v$1.tar.gz"
+}
+
 case "$1" in
+    prepare)
+        prepare $2
+        ;;
+
     release)
-        [ -z "$2" ] && echo "Please specify VERSION (without the v)" && exit 1
-        # make sure there are no uncommited changes
-        git diff --quiet && git diff --cached --quiet
-        # make sure it compiles
-        build
-        # make sure it passes tests
-        test
-        # update online docs
-        doc
-        gh-pages
-        release $2
+        prepare $2
+        submit $2
         ;;
 
     build)

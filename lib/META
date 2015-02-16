@@ -1,4 +1,4 @@
-version = "0.1.0"
+version = "0.1.1"
 description = "Macaroons for OCaml"
 archive(byte) = "macaroons.cma"
 archive(byte, plugin) = "macaroons.cma"
