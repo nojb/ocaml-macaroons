@@ -10,7 +10,6 @@ for more information.
 
 - [ocaml-sodium](https://github.com/dsheets/ocaml-sodium)
 - [ocaml-base64](https://github.com/mirage/ocaml-base64)
-- [ocaml-hex](https://github.com/mirage/ocaml-hex)
 
 #### How to install
 

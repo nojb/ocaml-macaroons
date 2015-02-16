@@ -89,9 +89,20 @@ module Make (C : CRYPTO) = struct
       caveats = [];
       signature = C.hmac ~key id }
 
+  let hex =
+    let digits = "0123456789abcdef" in
+    fun s ->
+      let b = Bytes.create (2 * String.length s) in
+      for i = 0 to String.length s - 1 do
+        let c = Char.code s.[i] in
+        let x1 = (c land 0xF0) lsr 4 and x2 = c land 0x0F in
+        Bytes.set b (2*i) digits.[x1]; Bytes.set b (2*i+1) digits.[x2]
+      done;
+      b
+
   let location {location} = location
   let identifier {identifier} = identifier
-  let signature {signature} = let `Hex s = Hex.of_string signature in s
+  let signature {signature} = hex signature
 
   let add_first_party_caveat m cid =
     let caveats = m.caveats @ [{cid; vid = None; cl = None}] in
@@ -248,7 +259,6 @@ module Make (C : CRYPTO) = struct
     Reader.p_macaroon (B64.decode s) 0
 
   let pp ppf m =
-    let hex s = let `Hex s = Hex.of_string s in s in
     Format.fprintf ppf "@[<v 0>";
     Format.fprintf ppf "@[<v 2>location@ %S@]@," m.location;
     Format.fprintf ppf "@[<v 2>identifier@ %S@]@," m.identifier;

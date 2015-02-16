@@ -5,7 +5,7 @@ archive(byte, plugin) = "macaroons.cma"
 archive(native) = "macaroons.cmxa"
 archive(native, plugin) = "macaroons.cmxs"
 exists_if = "macaroons.cma"
-requires = "hex base64"
+requires = "base64"
 package "sodium" (
   description = "Macaroons for OCaml with a touch of Sodium"
   archive(byte) = "sodium_macaroons.cma"

@@ -1,5 +1,5 @@
 #require "sodium";;
-#require "hex";;
 #require "base64";;
 #directory "_build/lib";;
 #load "macaroons.cma";;
+#load "sodium_macaroons.cma";;
