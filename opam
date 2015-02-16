@@ -8,7 +8,7 @@ license: "MIT"
 build: [
   ["./setup" "build"]
 ]
-build-doc: [make "doc"]
+build-doc: ["./setup" "doc"]
 install: [
   ["./setup" "install"]
 ]
