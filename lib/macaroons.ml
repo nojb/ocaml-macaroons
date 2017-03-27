@@ -124,7 +124,11 @@ module Make (C : CRYPTO) = struct
 
     let w_int n =
       let p s o =
-        let c i = Char.chr ((n lsr (8*i)) land 0xFF) in
+        let digits = "0123456789abcdef" in
+        let c i =
+          let x = ((n lsr (4*(3-i))) land 0xF) in
+          digits.[x]
+        in
         Bytes.set s (o + 0) (c 0);
         Bytes.set s (o + 1) (c 1);
         Bytes.set s (o + 2) (c 2);
@@ -171,7 +175,8 @@ module Make (C : CRYPTO) = struct
   end
 
   let serialize m =
-    B64.encode ~pad:true Writer.(run (w_macaroon m))
+    let alphabet = B64.uri_safe_alphabet in
+    B64.encode ~alphabet ~pad:true Writer.(run (w_macaroon m))
 
   module Reader = struct
     type ('a, 'b) reader = string -> int -> ('a, 'b) Result.t
@@ -194,7 +199,13 @@ module Make (C : CRYPTO) = struct
 
     let p_int s o =
       need 4 s o >>= fun () ->
-      let c i = Char.code (s.[o + i]) lsl (8*i) in
+      let num c =
+        let code = Char.code c in
+        if code >= Char.code '0' && code <= Char.code '9'
+        then code - Char.code '0'
+        else code - Char.code 'a' + 10
+      in
+      let c i = (num s.[o + i]) lsl (4*(3-i)) in
       let n = c 0 lor c 1 lor c 2 lor c 3 in
       return (n, o + 4)
 
@@ -256,7 +267,8 @@ module Make (C : CRYPTO) = struct
   type deserialize_error = Reader.error
 
   let deserialize s =
-    Reader.p_macaroon (B64.decode s) 0
+    let alphabet = B64.uri_safe_alphabet in
+    Reader.p_macaroon (B64.decode ~alphabet s) 0
 
   let pp ppf m =
     Format.fprintf ppf "@[<v 0>";
@@ -267,7 +279,9 @@ module Make (C : CRYPTO) = struct
       begin match c.vid with
         | None -> ()
         | Some vid ->
-          Format.fprintf ppf "@[<v 2>vid@ %s@]@," (B64.encode ~pad:true vid)
+          let alphabet = B64.uri_safe_alphabet in
+          let vid = B64.encode ~alphabet ~pad:true vid in
+          Format.fprintf ppf "@[<v 2>vid@ %s@]@," vid
       end;
       begin match c.cl with
         | None -> ()
