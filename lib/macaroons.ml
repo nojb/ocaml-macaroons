@@ -124,7 +124,11 @@ module Make (C : CRYPTO) = struct
 
     let w_int n =
       let p s o =
-        let c i = Char.chr ((n lsr (8*i)) land 0xFF) in
+        let digits = "0123456789abcdef" in
+        let c i =
+          let x = ((n lsr (4*(3-i))) land 0xF) in
+          digits.[x]
+        in
         Bytes.set s (o + 0) (c 0);
         Bytes.set s (o + 1) (c 1);
         Bytes.set s (o + 2) (c 2);
@@ -194,7 +198,13 @@ module Make (C : CRYPTO) = struct
 
     let p_int s o =
       need 4 s o >>= fun () ->
-      let c i = Char.code (s.[o + i]) lsl (8*i) in
+      let num c =
+        let code = Char.code c in
+        if code >= Char.code '0' && code <= Char.code '9'
+        then code - Char.code '0'
+        else code - Char.code 'a' + 10
+      in
+      let c i = (num s.[o + i]) lsl (4*(3-i)) in
       let n = c 0 lor c 1 lor c 2 lor c 3 in
       return (n, o + 4)
 
