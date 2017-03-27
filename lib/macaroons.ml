@@ -175,7 +175,8 @@ module Make (C : CRYPTO) = struct
   end
 
   let serialize m =
-    B64.encode ~pad:true Writer.(run (w_macaroon m))
+    let alphabet = B64.uri_safe_alphabet in
+    B64.encode ~alphabet ~pad:true Writer.(run (w_macaroon m))
 
   module Reader = struct
     type ('a, 'b) reader = string -> int -> ('a, 'b) Result.t
@@ -266,7 +267,8 @@ module Make (C : CRYPTO) = struct
   type deserialize_error = Reader.error
 
   let deserialize s =
-    Reader.p_macaroon (B64.decode s) 0
+    let alphabet = B64.uri_safe_alphabet in
+    Reader.p_macaroon (B64.decode ~alphabet s) 0
 
   let pp ppf m =
     Format.fprintf ppf "@[<v 0>";
@@ -277,7 +279,9 @@ module Make (C : CRYPTO) = struct
       begin match c.vid with
         | None -> ()
         | Some vid ->
-          Format.fprintf ppf "@[<v 2>vid@ %s@]@," (B64.encode ~pad:true vid)
+          let alphabet = B64.uri_safe_alphabet in
+          let vid = B64.encode ~alphabet ~pad:true vid in
+          Format.fprintf ppf "@[<v 2>vid@ %s@]@," vid
       end;
       begin match c.cl with
         | None -> ()
