@@ -11,9 +11,9 @@ OCAMLBUILD = ocamlbuild -use-ocamlfind -classic-display
 
 build:
 ifeq ($(SODIUM),)
-	$(OCAMLBUILD) lib/macaroons.{cma,cmxa,cmxs,a}
+	$(OCAMLBUILD) lib/macaroons.{cma,cmx,cmxa,cmxs,a}
 else
-	$(OCAMLBUILD) lib/{sodium_,}macaroons.{cma,cmxa,cmxs,a}
+	$(OCAMLBUILD) lib/{sodium_,}macaroons.{cma,cmx,cmxa,cmxs,a}
 endif
 
 prepare: build test doc gh-pages
@@ -51,7 +51,7 @@ test:
 	./test.byte
 
 install: build
-	ocamlfind install macaroons lib/META _build/lib/*macaroons.{mli,cmi,cmti,cma,cmxa,cmxs,a}
+	ocamlfind install macaroons lib/META _build/lib/*macaroons.{mli,cmi,cmti,cma,cmx,cmxa,cmxs,a}
 
 uninstall:
 	ocamlfind remove macaroons
